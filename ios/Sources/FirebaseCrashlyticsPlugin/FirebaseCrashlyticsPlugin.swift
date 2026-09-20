@@ -6,7 +6,22 @@ import Capacitor
  * here: https://capacitorjs.com/docs/plugins/ios
  */
 @objc(FirebaseCrashlyticsPlugin)
-public class FirebaseCrashlyticsPlugin: CAPPlugin {
+public class FirebaseCrashlyticsPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "FirebaseCrashlyticsPlugin"
+    public let jsName = "FirebaseCrashlytics"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "crash", returnType: .promise),
+        CAPPluginMethod(name: "setContext", returnType: .promise),
+        CAPPluginMethod(name: "addLogMessage", returnType: .promise),
+        CAPPluginMethod(name: "setUserId", returnType: .promise),
+        CAPPluginMethod(name: "setEnabled", returnType: .promise),
+        CAPPluginMethod(name: "isEnabled", returnType: .promise),
+        CAPPluginMethod(name: "didCrashDuringPreviousExecution", returnType: .promise),
+        CAPPluginMethod(name: "sendUnsentReports", returnType: .promise),
+        CAPPluginMethod(name: "deleteUnsentReports", returnType: .promise),
+        CAPPluginMethod(name: "recordException", returnType: .promise)
+    ]
+
     public let errorMessageMissing = "message must be provided."
     public let errorKeyMissing = "key must be provided."
     public let errorValueMissing = "value must be provided."
@@ -28,7 +43,7 @@ public class FirebaseCrashlyticsPlugin: CAPPlugin {
             call.reject(errorKeyMissing)
             return
         }
-        let hasValue = call.hasOption("value")
+        let hasValue = call.options["value"] != nil
         if hasValue == false {
             call.reject(errorValueMissing)
             return
