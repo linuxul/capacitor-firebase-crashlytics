@@ -10,17 +10,20 @@ public class FirebaseCrashlyticsPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "FirebaseCrashlyticsPlugin"
     public let jsName = "FirebaseCrashlytics"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "crash", returnType: .promise),
-        CAPPluginMethod(name: "setContext", returnType: .promise),
-        CAPPluginMethod(name: "addLogMessage", returnType: .promise),
-        CAPPluginMethod(name: "setUserId", returnType: .promise),
-        CAPPluginMethod(name: "setEnabled", returnType: .promise),
-        CAPPluginMethod(name: "isEnabled", returnType: .promise),
-        CAPPluginMethod(name: "didCrashDuringPreviousExecution", returnType: .promise),
-        CAPPluginMethod(name: "sendUnsentReports", returnType: .promise),
-        CAPPluginMethod(name: "deleteUnsentReports", returnType: .promise),
-        CAPPluginMethod(name: "recordException", returnType: .promise)
+        .promise("crash", FirebaseCrashlyticsPlugin.crash),
+        .promise("setContext", FirebaseCrashlyticsPlugin.setContext),
+        .promise("addLogMessage", FirebaseCrashlyticsPlugin.addLogMessage),
+        .promise("setUserId", FirebaseCrashlyticsPlugin.setUserId),
+        .promise("setEnabled", FirebaseCrashlyticsPlugin.setEnabled),
+        .promise("isEnabled", FirebaseCrashlyticsPlugin.isEnabled),
+        .promise("didCrashDuringPreviousExecution", FirebaseCrashlyticsPlugin.didCrashDuringPreviousExecution),
+        .promise("sendUnsentReports", FirebaseCrashlyticsPlugin.sendUnsentReports),
+        .promise("deleteUnsentReports", FirebaseCrashlyticsPlugin.deleteUnsentReports),
+        .promise("recordException", FirebaseCrashlyticsPlugin.recordException)
     ]
+
+    // Every method stays synchronous: the Crashlytics calls are quick, and the bridge queue keeps the keys, logs,
+    // settings and recorded exceptions in the order of the calls.
 
     public let errorMessageMissing = "message must be provided."
     public let errorKeyMissing = "key must be provided."
@@ -33,81 +36,75 @@ public class FirebaseCrashlyticsPlugin: CAPPlugin, CAPBridgedPlugin {
         implementation = FirebaseCrashlytics()
     }
 
-    @objc func crash(_ call: CAPPluginCall) {
+    func crash(_ call: CAPPluginCall) {
         call.resolve()
         implementation?.crash()
     }
 
-    @objc func setContext(_ call: CAPPluginCall) {
+    func setContext(_ call: CAPPluginCall) throws {
         guard let key = call.getString("key") else {
-            call.reject(errorKeyMissing)
-            return
+            throw CAPPluginError(errorKeyMissing)
         }
         let hasValue = call.options["value"] != nil
         if hasValue == false {
-            call.reject(errorValueMissing)
-            return
+            throw CAPPluginError(errorValueMissing)
         }
         let type = call.getString("type") ?? "string"
         implementation?.setContext(key, type, call)
         call.resolve()
     }
 
-    @objc func addLogMessage(_ call: CAPPluginCall) {
+    func addLogMessage(_ call: CAPPluginCall) throws {
         guard let message = call.getString("message") else {
-            call.reject(errorMessageMissing)
-            return
+            throw CAPPluginError(errorMessageMissing)
         }
         implementation?.addLogMessage(message)
         call.resolve()
     }
 
-    @objc func setUserId(_ call: CAPPluginCall) {
+    func setUserId(_ call: CAPPluginCall) throws {
         guard let userId = call.getString("userId") else {
-            call.reject(errorUserIdMissing)
-            return
+            throw CAPPluginError(errorUserIdMissing)
         }
         implementation?.setUserID(userId)
         call.resolve()
     }
 
-    @objc func setEnabled(_ call: CAPPluginCall) {
+    func setEnabled(_ call: CAPPluginCall) throws {
         guard let enabled = call.getBool("enabled") else {
-            call.reject(errorEnabledMissing)
-            return
+            throw CAPPluginError(errorEnabledMissing)
         }
         implementation?.setEnabled(enabled)
         call.resolve()
     }
 
-    @objc func isEnabled(_ call: CAPPluginCall) {
+    func isEnabled(_ call: CAPPluginCall) {
         let enabled = implementation?.isEnabled()
         call.resolve([
             "enabled": enabled!
         ])
     }
 
-    @objc func didCrashDuringPreviousExecution(_ call: CAPPluginCall) {
+    func didCrashDuringPreviousExecution(_ call: CAPPluginCall) {
         let crashed = implementation?.didCrashDuringPreviousExecution()
         call.resolve([
             "crashed": crashed!
         ])
     }
 
-    @objc func sendUnsentReports(_ call: CAPPluginCall) {
+    func sendUnsentReports(_ call: CAPPluginCall) {
         implementation?.sendUnsentReports()
         call.resolve()
     }
 
-    @objc func deleteUnsentReports(_ call: CAPPluginCall) {
+    func deleteUnsentReports(_ call: CAPPluginCall) {
         implementation?.deleteUnsentReports()
         call.resolve()
     }
 
-    @objc func recordException(_ call: CAPPluginCall) {
+    func recordException(_ call: CAPPluginCall) throws {
         guard let message = call.getString("message") else {
-            call.reject(errorMessageMissing)
-            return
+            throw CAPPluginError(errorMessageMissing)
         }
 
         let stacktrace = call.getArray("stacktrace", JSObject.self)
