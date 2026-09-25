@@ -4,6 +4,7 @@ import android.Manifest
 import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
+import com.getcapacitor.PluginException
 import com.getcapacitor.PluginMethod
 import com.getcapacitor.annotation.CapacitorPlugin
 import com.getcapacitor.annotation.Permission
@@ -25,26 +26,17 @@ public class FirebaseCrashlyticsPlugin : Plugin() {
 
     @PluginMethod
     public fun crash(call: PluginCall) {
-        val message = call.getString("message")
-        if (message == null) {
-            call.reject(ERROR_MESSAGE_MISSING)
-            return
-        }
+        val message = call.getString("message") ?: throw PluginException(ERROR_MESSAGE_MISSING)
         call.resolve()
         implementation.crash(message)
     }
 
     @PluginMethod
     public fun setContext(call: PluginCall) {
-        val key = call.getString("key")
-        if (key == null) {
-            call.reject(ERROR_KEY_MISSING)
-            return
-        }
+        val key = call.getString("key") ?: throw PluginException(ERROR_KEY_MISSING)
         val hasValue = call.data.has("value")
         if (!hasValue) {
-            call.reject(ERROR_VALUE_MISSING)
-            return
+            throw PluginException(ERROR_VALUE_MISSING)
         }
         // "string" is the default, so type is never null here
         val type = call.getString("type", "string")!!
@@ -54,33 +46,21 @@ public class FirebaseCrashlyticsPlugin : Plugin() {
 
     @PluginMethod
     public fun setUserId(call: PluginCall) {
-        val userId = call.getString("userId")
-        if (userId == null) {
-            call.reject(ERROR_USERID_MISSING)
-            return
-        }
+        val userId = call.getString("userId") ?: throw PluginException(ERROR_USERID_MISSING)
         implementation.setUserId(userId)
         call.resolve()
     }
 
     @PluginMethod
     public fun addLogMessage(call: PluginCall) {
-        val message = call.getString("message")
-        if (message == null) {
-            call.reject(ERROR_MESSAGE_MISSING)
-            return
-        }
+        val message = call.getString("message") ?: throw PluginException(ERROR_MESSAGE_MISSING)
         implementation.addLogMessage(message)
         call.resolve()
     }
 
     @PluginMethod
     public fun setEnabled(call: PluginCall) {
-        val enabled = call.getBoolean("enabled")
-        if (enabled == null) {
-            call.reject(ERROR_ENABLED_MISSING)
-            return
-        }
+        val enabled = call.getBoolean("enabled") ?: throw PluginException(ERROR_ENABLED_MISSING)
         implementation.setEnabled(enabled)
         call.resolve()
     }
@@ -112,11 +92,7 @@ public class FirebaseCrashlyticsPlugin : Plugin() {
 
     @PluginMethod
     public fun recordException(call: PluginCall) {
-        val message = call.getString("message")
-        if (message == null) {
-            call.reject(ERROR_MESSAGE_MISSING)
-            return
-        }
+        val message = call.getString("message") ?: throw PluginException(ERROR_MESSAGE_MISSING)
 
         val stacktrace = call.getArray("stacktrace", null)
         implementation.recordException(message, stacktrace)
